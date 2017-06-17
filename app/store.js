@@ -1,50 +1,50 @@
-import {applyMiddleware, createStore, compose, combineReducers} from 'redux';
-import {createReducer} from './reducer';
-import * as GlobalReducer from 'common/js/reducer';
+import { applyMiddleware, createStore, compose, combineReducers } from 'redux';
+import { createReducer } from './reducer';
 import createLogger from 'redux-logger';
 import thunkMiddleware from 'redux-thunk';
-import promiseMiddleware from 'common/js/middlewares/promise.js';
+import promiseWithStateMiddleware from 'common/js/middlewares/promise.js';
+import promiseMiddleware from 'redux-promise-middleware';
 
 //生产环境redux中间件
-let middlewares = [thunkMiddleware, promiseMiddleware];
+let middlewares = [thunkMiddleware, promiseMiddleware(), promiseWithStateMiddleware];
 
 if (__DEV__) {
-	const logger = createLogger({
-		duration: true,
-		logErrors: true,
-		collapsed: true,
-		actionTransformer: (action) => ({
-			...action,
-			type: action.type && action.type.toString()
-		})
-	});
-	middlewares = [
-		...middlewares,
-		logger
-	];
+  const logger = createLogger({
+    duration: true,
+    logErrors: true,
+    collapsed: true,
+    actionTransformer: (action) => ({
+      ...action,
+      type: action.type && action.type.toString()
+    })
+  });
+  middlewares = [
+    ...middlewares,
+    logger
+  ];
 }
 
 let storeEnhancerFunctions = [applyMiddleware(...middlewares)];
 
 if (__DEV__) {
-	const devToolsExtension = window.devToolsExtension
-		? window.devToolsExtension()
-		: f => f;
-	storeEnhancerFunctions = [
-		...storeEnhancerFunctions,
-		devToolsExtension
-	]
+  const devToolsExtension = window.devToolsExtension
+    ? window.devToolsExtension()
+    : f => f;
+  storeEnhancerFunctions = [
+    ...storeEnhancerFunctions,
+    devToolsExtension
+  ]
 }
 
 const configureStore = (reducer, preloadedState = {}) => {
-	const store = createStore(reducer, preloadedState, compose(...storeEnhancerFunctions));
-	store.asyncReducers = {};
-	return store;
+  const store = createStore(reducer, preloadedState, compose(...storeEnhancerFunctions));
+  store.asyncReducers = {};
+  return store;
 }
 
-const initialReducer = createReducer(GlobalReducer);
+// const initialReducer = createReducer(GlobalReducer);
 // console.log('initialReducer', initialReducer);
-const initStore = configureStore(initialReducer);
+const initStore = configureStore(createReducer());
 
 ///测试多个store
 // function reducerB(state = {fxxk: false, kao: false}, action) {
@@ -84,14 +84,14 @@ const initStore = configureStore(initialReducer);
  * @param asyncReducer {Function} reducer纯函数
  */
 export const injectAsyncReducer = (name, asyncReducer, store = initStore) => {
-	if (typeof name === 'string' && typeof asyncReducer === 'function') {
-		store.asyncReducers[name] = asyncReducer;
-	}
-	if (Object.prototype.toString.call(name) === "[object Object]") {
-		store.asyncReducers = name;
-	}
-	const reducer = createReducer(store.asyncReducers);
-	store.replaceReducer(reducer);
+  if (typeof name === 'string' && typeof asyncReducer === 'function') {
+    store.asyncReducers[name] = asyncReducer;
+  }
+  if (Object.prototype.toString.call(name) === "[object Object]") {
+    store.asyncReducers = name;
+  }
+  const reducer = createReducer(store.asyncReducers);
+  store.replaceReducer(reducer);
 }
 
 export default initStore;

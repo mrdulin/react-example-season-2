@@ -12,6 +12,8 @@ _React + Webpack + ES6 + node + express_
 *   使用`scp`上传`server.js`, `scp -P 29041 /Users/dulin/workspace/react-juhe-tools/server.js root@<ip_address>:/root/workspace/react-juhe-tools`
 *   `head -n 1 /etc/issue`查看`VPS`操作系统版本，结果`CentOS release 6.6 (Final)`
 *   `VPS`安装`nvm`,
+*   `npm run test`使用`jest`测试所有文件, `jest`配置在`package.json`文件中
+*   `./node_modules/.bin/jest app/__test__/redux-actions/createAction.spec.js`，使用`jest`测试指定的文件
 
 ```bash
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
@@ -103,3 +105,53 @@ __FAQ__
 5. 怎么配合`webpack-dev-server`使用项目目录中`mock`的`json`数据？
 
     `webpack-dev-server`需要设置`--content-base .`参数，这样就可以访问到项目根目录下的`mock`文件夹，例如：`http://localhost:3000/mock/city.json`
+
+6. 怎么查看实际依赖的`node_modules`中各个`module`的版本
+
+  `npm list --depth=0`
+
+7. 关于`React`组件的粒度，什么标准？
+
+  考虑到`React`中嵌套组件间的通信的复杂度，在实际运用中，嵌套和粒度之间应该有一个平衡，组件的粒度应该以组件嵌套不超过3层为标准。对于多层嵌套的组件，
+  虽然可以考虑使用`context`进行跨组件通信，但会导致组件间较强的耦合，优先还是以`props`作为通信方式。
+
+8. 关于`React`组件的划分?
+
+  一般分为`container component`容器型组件，`presentational component`展示型组件，`high-order component`高阶组件，这里只针对`container component`做一些总结,
+  容器型组件一般通过`react-redux`的`connect`来注入`redux`的`reducer`到该组件的`props`上，作为数据源。实际项目中，有时候业务会比较复杂，如果只有一个容器型组件，需要把容器型包含的所有组件需要的`reducer`都注入进来，层层传递下去，很繁琐。这时候，可以考虑在`root container component`下在构造几个`child container component`，各自作为一块视图的容器组件，然后分别给这些子容器组件注入相应的`reducer`。
+
+9. 按需加载，还是一次性加载？
+
+  按需加载：本项目`app/modules`下的模块都是异步加载（路由，容器组件，reducer），这种架构的好处是按需加载，省流量，初次进入应用时，不需要把整个应用打包的`js`下载下来，对于大型项目比较适用。
+
+  但是异步加载`reducer`有一个不算问题的问题，应用的`store`中，只有已加载的模块的`reducer`，没有加载的模块的`reducer`是不存在的，所以如果当前加载了A模块，A模块需要B模块的`reducer`，
+  这时候B模块是没有加载的，因此B模块的`reducer`是不存在于`store`中的。其实理论上，这种架构，模块之间是不应该有相互依赖的。如果两个模块间的`reducer`产生相互依赖，说明这两个模块产生了
+  公用的`reducer`，应该考虑将这部分`reducer`设计为公用的。使其在应用级上可见，而不是模块级别。
+
+  还有一个问题就是，每次进入一个页面，需要先下载该页面（模块）的资源文件，然后执行，初始化，渲染。相比于一次性加载，多了下载资源文件的步骤，理论上页面渲染出来的速度是会慢的。
+
+  一次性加载：就是将所有模块的文件都打包在一起，初次进入应用时，一次性将所有资源(js(包括所有component, reducer), css, 媒体资源)都下载下来。那么这时候如果A模块需要B模块的`reducer`，
+  是可以拿到的。
+
+
+10. 对于单页面应用路由跳转，例如使用: `window.location.hash = '#/someRoute?id=1231213&name=脾疼'` 在移动端无效的问题。
+
+  原因是没有对`url`上的特殊字符进行编码，即使用`encodeURIComponent`或者`encodeURI`进行编码，看图说话:
+
+  <img src="./README/hash.png" alt="hash" width='200px'>
+
+  我在`window.location.hash = xxx`语句执行完后，`alert`输出的内容，后面是我拼接的原始`hash`字符串，前面是我读取的`window.location.hash`，由于没有对中文进行编码，页面并没有跳转，但是应用也没有`crash`。
+
+  解决办法：对中文等特殊字符进行`encodeURIComponent`编码后，`window.location.hash = xxx`跳转正常。
+
+  `encodeURIComponent`和`encodeURI`的区别是，看例子说话：
+
+```js
+const url = 'http://www.test.pajkdc.com/iceland/#/video-list?tcmTagId=35&tcmTagName=脾疼';
+const urlEncode = encodeURI(url); //http://www.test.pajkdc.com/iceland/#/video-list?tcmTagId=35&tcmTagName=%E8%84%BE%E7%96%BC
+const urlEncode2 = encodeURIComponent(url); //http%3A%2F%2Fwww.test.pajkdc.com%2Ficeland%2F%23%2Fvideo-list%3FtcmTagId%3D35%26tcmTagName%3D%E8%84%BE%E7%96%BC
+const urlEncode3 = `http://www.test.pajkdc.com/iceland/#/video-list?tcmTagId=35&tcmTagName=${encodeURIComponent('脾疼')}` //http://www.test.pajkdc.com/iceland/#/video-list?tcmTagId=35&tcmTagName=%E8%84%BE%E7%96%BC
+```
+
+
+

@@ -37,6 +37,11 @@ const routes = {
         require('./modules/FunctionAsChildComponents'),
         require('./modules/DefaultProps'),
         require('./modules/ComponentKeyProperty'),
+        require('./modules/setStateInComponentWillMount'),
+        require('./modules/setStateFromStoreData'),
+        require('./modules/ReselectLearning'),
+        require('./modules/GetUrlQueryParameters'),
+        require('./modules/redux-actions-flow'),
         {
           path: '*',
           onEnter: (nState, replace) => replace('/')

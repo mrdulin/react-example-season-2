@@ -13,8 +13,8 @@ module.exports = {
       name: '新闻头条'
     },
     {
-      key: 'transitionToSelf/1',
-      name: '路由跳转自己'
+      key: 'route-to-self/1',
+      name: '路由不变，路由参数改变'
     },
     {
       key: 'custom-attribute',
@@ -47,10 +47,6 @@ module.exports = {
     {
       key: 'router-hoc',
       name: 'react-router高阶组件'
-    },
-    {
-      key: 'core-js-and-transform-runtime',
-      name: '测试core-js和babel-polyfill，及打包后bundle文件的大小'
     },
     {
       key: 'image-zoom',
@@ -109,8 +105,8 @@ module.exports = {
       name: '从redux的store拿数据setState导致，在setState的第二个参数callback中的坑'
     },
     {
-      key: 'reselect-learning',
-      name: 'reselect研究'
+      key: 'reselect-flow',
+      name: '使用reselect'
     },
     {
       key: 'get-url-query-parameters',
